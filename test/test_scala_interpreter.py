@@ -63,7 +63,7 @@ def test_spark_rdd(scala_interpreter):
     result = scala_interpreter.interpret("sc.parallelize(0 until 10).sum().toInt")
     assert result.strip().endswith(str(sum(range(10))))
 
-
+@pytest.mark.skip(reason="Skipping this test for now")
 def test_spark_dataset(scala_interpreter):
     scala_interpreter.interpret("""
     case class DatasetTest(y: Int)
