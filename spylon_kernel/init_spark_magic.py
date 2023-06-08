@@ -8,6 +8,7 @@ from .scala_interpreter import init_spark
 try:
     import jedi
     from jedi.api.helpers import get_on_completion_name
+    from jedi import common
 except ImportError as ex:
     jedi = None
 
@@ -59,7 +60,7 @@ class InitSparkMagic(Magic):
         # Do not evaluate the cell contents using the kernel
         self.evaluate = False
 
-    def get_completions(self, info):
+    def get_completions(self, info, required_info=['code', 'line_num', 'column', 'start']):
         """Gets Python completions based on the current cursor position
         within the %%init_spark cell.
 
@@ -74,18 +75,20 @@ class InitSparkMagic(Magic):
         if jedi is None:
             return []
 
+        if not all(key in info for key in required_info):
+            raise ValueError(f"Missing required keys in info. Required keys are: {required_info}")
+
         text = info['code']
         position = (info['line_num'], info['column'])
         interpreter = jedi.Interpreter(text, [self.env])
 
-        lines = text.splitlines()
         name = get_on_completion_name(
             interpreter._get_module_node(),
-            lines,
+            common.splitlines(text),
             position
         )
 
         before = text[:len(text) - len(name)]
-        completions = interpreter.completions()
-        completions = [before + c.name_with_symbols for c in completions]
-        return [c[info['start']:] for c in completions]
+        completions = [before + c.name_with_symbols for c in interpreter.completions() if len(before + c.name_with_symbols) > info['start']]
+
+        return completions
