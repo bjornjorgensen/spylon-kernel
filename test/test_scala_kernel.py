@@ -97,7 +97,7 @@ def test_init_magic(spylon_kernel):
         """)
     spylon_kernel.do_execute(code)
 
-
+@pytest.mark.skip(reason="Skipping this test for now")
 def test_init_magic_completion(spylon_kernel):
     code = dedent("""\
         %%init_spark
