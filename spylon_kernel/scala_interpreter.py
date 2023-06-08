@@ -411,12 +411,11 @@ class ScalaInterpreter(object):
         code = code if code.endswith('\n') else code+'\n'
 
         try:
+            # With Scala 2.12, the interpret method takes two arguments
             res = self.jimain.interpret(code, False)
+
             pyres = self.jbyteout.toByteArray().decode("utf-8")
-            # The scala interpreter returns a sentinel case class member here
-            # which is typically matched via pattern matching.  Due to it
-            # having a very long namespace, we just resort to simple string
-            # matching here.
+
             result = res.toString()
             if result == "Success":
                 return pyres
