@@ -421,6 +421,7 @@ class ScalaInterpreter(object):
             if result == "Success":
                 return pyres
             elif result == 'Error':
+                print(pyres)
                 raise ScalaException(pyres)
             elif result == 'Incomplete':
                 raise ScalaException(pyres or '<console>: error: incomplete input')
