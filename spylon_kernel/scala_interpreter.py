@@ -408,15 +408,12 @@ class ScalaInterpreter(object):
         """
         # Ensure the cell is not incomplete. Same approach taken by Apache Zeppelin.
         # https://github.com/apache/zeppelin/blob/3219218620e795769e6f65287f134b6a43e9c010/spark/src/main/java/org/apache/zeppelin/spark/SparkInterpreter.java#L1263
-        code = 'print("")\n'+code
+        code = 'print("")\n' + code
 
         try:
             res = self.jimain.interpret(code, False)
             pyres = self.jbyteout.toByteArray().decode("utf-8")
-            # The scala interpreter returns a sentinel case class member here
-            # which is typically matched via pattern matching.  Due to it
-            # having a very long namespace, we just resort to simple string
-            # matching here.
+            # The scala interpreter returns a sentinel case class member here.
             result = res.toString()
             if result == "Success":
                 return pyres
@@ -425,7 +422,10 @@ class ScalaInterpreter(object):
             elif result == 'Incomplete':
                 raise ScalaException(pyres or '<console>: error: incomplete input')
             return pyres
+        except Exception as ex:
+            self.log.error(f'Error during interpretation: {str(ex)}')
         finally:
+            # Always reset the ByteArrayOutputStream to clear the output of the interpreter.
             self.jbyteout.reset()
 
     def last_result(self):
@@ -439,9 +439,14 @@ class ScalaInterpreter(object):
         object
         """
         # TODO : when evaluating multiline expressions this returns the first result
-        lr = self.jimain.lastRequest()
-        res = lr.lineRep().call("$result", spark_state.spark_jvm_helpers.to_scala_list([]))
-        return res
+        try:
+            # When evaluating multiline expressions this returns the first result.
+            lr = self.jimain.lastRequest()
+            res = lr.lineRep().call("$result", spark_state.spark_jvm_helpers.to_scala_list([]))
+            return res
+        except Exception as ex:
+            self.log.error(f'Error while fetching the last result: {str(ex)}')
+            return None
 
     def bind(self, name, value, jtyp="Any"):
         """Set a variable in the Scala REPL to a Python valued type.
