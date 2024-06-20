@@ -87,6 +87,6 @@ class InitSparkMagic(Magic):
         )
 
         before = text[:len(text) - len(name)]
-        completions = interpreter.completions()
+        completions = interpreter.complete()
         completions = [before + c.name_with_symbols for c in completions]
         return [c[info['start']:] for c in completions]
